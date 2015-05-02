@@ -7,8 +7,6 @@ my $VERSION="1.0-BETA";
 
 use strict;
 use File::Copy qw(move);
-# HTML::Strip may need to be installed - /usr/local/cpanel/3rdparty/bin/cpanm --force HTML::Strip
-#use HTML::Strip;
 &module_sanity_check;
 
 my $ACCT=@ARGV[0];
@@ -169,7 +167,7 @@ sub module_sanity_check {
    if ($@) { 
       print "WARNING: Perl Module HTML::Strip.pm not installed!\n";
       print "Installing now - Please stand by.\n";
-      system("/usr/local/cpanel/3rdparty/bin/cpanm --force HTML::Strip");
+      system("/usr/local/cpanel/bin/cpanm --force HTML::Strip");
    }
    else { 
       print "Module HTML::Strip.pm already installed!\n";
