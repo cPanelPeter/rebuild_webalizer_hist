@@ -7,12 +7,9 @@
 my $VERSION="0.1";
 
 use strict;
+# HTML::Strip may need to be installed - /usr/local/cpanel/3rdparty/bin/cpanm --force HTML::Strip
 use HTML::Strip;
 use File::Copy qw(move);
-#use Cpanel::Usage                      ();
-
-# TODO: 
-# Add backup section to backup current webalizer.hist if it exists.
 
 my $ACCT=@ARGV[0];
 chomp($ACCT);
@@ -23,6 +20,20 @@ if ($ACCT eq "") {
 my $HomeDir;
 my $BASEDIR;
 my @BASEDIR;
+my $FILE;
+my @sorted;
+my @reversed;
+my @USAGEFILES;
+my $line;
+my $newline;
+my $DATE;
+my @DATES;
+my $YEAR;
+my $MONTH;
+my $clean_date;
+my $passline;
+my @PASSWDS;
+
 open(PASSWD,"/etc/passwd");
 @PASSWDS=<PASSWD>;
 close(PASSWD);
@@ -41,11 +52,19 @@ else {
    $BASEDIR="$HomeDir/tmp/webalizer";
 }
 
+# check to see if the /home/cPUser/tmp/webalizer directory exists.  Bail if it doesn't.
+# It means that Webalizer is not configured.
+
+if (!(-e("$BASEDIR"))) { 
+	print "Error: webalizer may not be configured for $ACCT\n";
+	exit;
+}
+
 # Backup current webalizer.hist file (if it exists)
 my $now = time();
 my $backupfilename="webalizer.hist.$now";
 print "Backing up $BASEDIR/webalizer.hist to $BASEDIR/$backupfilename\n";
-move ("$BASEDIR/webalizer.hist" "$BASEDIR/$backupfilename");
+move("$BASEDIR/webalizer.hist","$BASEDIR/$backupfilename");
 
 opendir(BASEDIR,"$BASEDIR");
 @BASEDIR=readdir(BASEDIR);
@@ -71,6 +90,13 @@ foreach $line(@reversed) {
 }
 
 # Now process each usage_YYYYMM.html file.
+my $x;
+my $hs;
+my $first;
+my $last;
+my @webstats;
+my $string;
+
 foreach $FILE(@USAGEFILES) { 
    chomp($FILE);
    $DATE=substr($FILE,6);
