@@ -8,13 +8,45 @@ my $VERSION="0.1";
 
 use strict;
 use HTML::Strip;
+use File::Copy qw(move);
+#use Cpanel::Usage                      ();
 
 # TODO: 
-# Ask for username
-# Then get HOMEDIR from /etc/passwd file.
-# set #BASEDIR accordingly...
+# Add backup section to backup current webalizer.hist if it exists.
 
-$BASEDIR="/home/cptestdomain/tmp/webalizer";
+my $ACCT=@ARGV[0];
+chomp($ACCT);
+if ($ACCT eq "") {
+   &Usage;
+}
+
+my $HomeDir;
+my $BASEDIR;
+my @BASEDIR;
+open(PASSWD,"/etc/passwd");
+@PASSWDS=<PASSWD>;
+close(PASSWD);
+foreach $passline(@PASSWDS) {
+   chomp($passline);
+   if ($passline =~ m/\b$ACCT\b/) {
+      ($HomeDir)=(split(/:/,$passline))[5];
+      last;
+   }
+}
+if (!($HomeDir)) { 
+   print "Error: $ACCT not found!\n";
+   exit;
+}
+else { 
+   $BASEDIR="$HomeDir/tmp/webalizer";
+}
+
+# Backup current webalizer.hist file (if it exists)
+my $now = time();
+my $backupfilename="webalizer.hist.$now";
+print "Backing up $BASEDIR/webalizer.hist to $BASEDIR/$backupfilename\n";
+move ("$BASEDIR/webalizer.hist" "$BASEDIR/$backupfilename");
+
 opendir(BASEDIR,"$BASEDIR");
 @BASEDIR=readdir(BASEDIR);
 closedir(BASEDIR);
@@ -59,7 +91,7 @@ foreach $FILE(@USAGEFILES) {
          $x++;   
       }   
       # Get first and last date (from range of dates 
-      # between Daily Statistics for and Hourly Statistics for
+      # between "Daily Statistics for" and "Hourly Statistics for"
       &process_dates() if /Daily Statistics for/;
    }
    close(FH);
@@ -72,7 +104,10 @@ foreach $FILE(@USAGEFILES) {
       shift(@webstats);
    }
    $string = "$MONTH $YEAR @webstats[0] @webstats[1] @webstats[5] @webstats[4] $first $last @webstats[2] @webstats[3]";
-   print "$string\n";
+   #print "$string\n";
+   open(NEW,">>$BASEDIR/webalizer.hist");
+   print NEW "$string\n";
+   close(NEW); 
    @webstats=undef;
 }
 
@@ -87,3 +122,8 @@ sub process_dates {
    }
 }       
 
+
+sub Usage { 
+   print "Usage: ./rebuild_webalizer_hist cPanelUser\n";
+   exit;
+}

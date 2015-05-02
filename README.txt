@@ -20,9 +20,9 @@ This script when run will parse the usage_YYYYMM.html files and grab the data
 and re-create the webalizer.hist file.  
 
 After running this, your Webalizer history should be back to normal. 
-Please note though that Webalizer only stores 1 year worth of history.  So if you
-have lost more than 1 year, you will probably only be able to get back one year
-despite having previsous years usage_YYYYMM.html files.
+Please note though that Webalizer only stores 1 year worth of history.  
+So if you have lost more than 1 year, you will probably only be able to 
+get back one year despite having previous years usage_YYYYMM.html files.
 
 
 
