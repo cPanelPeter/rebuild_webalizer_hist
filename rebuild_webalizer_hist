@@ -18,6 +18,8 @@ if ($ACCT eq "") {
 }
 
 my $HomeDir;
+my $uid;
+my $gid;
 my $BASEDIR;
 my @BASEDIR;
 my $FILE;
@@ -41,6 +43,8 @@ foreach $passline(@PASSWDS) {
    chomp($passline);
    if ($passline =~ m/\b$ACCT\b/) {
       ($HomeDir)=(split(/:/,$passline))[5];
+      ($uid)=(split(/:/,$passline))[2];
+      ($gid)=(split(/:/,$passline))[3];
       last;
    }
 }
@@ -63,8 +67,9 @@ if (!(-e("$BASEDIR"))) {
 # Backup current webalizer.hist file (if it exists)
 my $now = time();
 my $backupfilename="webalizer.hist.$now";
-print "Backing up $BASEDIR/webalizer.hist to $BASEDIR/$backupfilename\n";
+print "Backing up $BASEDIR/webalizer.hist to $BASEDIR/$backupfilename - ";
 move("$BASEDIR/webalizer.hist","$BASEDIR/$backupfilename");
+print "Done\n";
 
 opendir(BASEDIR,"$BASEDIR");
 @BASEDIR=readdir(BASEDIR);
@@ -90,6 +95,7 @@ foreach $line(@reversed) {
 }
 
 # Now process each usage_YYYYMM.html file.
+print "Processing each usage_YYYYMM.html file... - ";
 my $x;
 my $hs;
 my $first;
@@ -130,12 +136,16 @@ foreach $FILE(@USAGEFILES) {
       shift(@webstats);
    }
    $string = "$MONTH $YEAR @webstats[0] @webstats[1] @webstats[5] @webstats[4] $first $last @webstats[2] @webstats[3]";
-   #print "$string\n";
    open(NEW,">>$BASEDIR/webalizer.hist");
    print NEW "$string\n";
    close(NEW); 
    @webstats=undef;
 }
+
+print "Done\n";
+print "Fixing permissions - ";
+chown $uid, $gid, "$BASEDIR/webalizer.hist";
+print "Done\n";
 
 sub process_dates {
    while ($line = <FH>, $line !~ /Hourly Statistics for/) {
